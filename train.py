@@ -40,6 +40,9 @@ for images in os.listdir('origin_data'):
     with open('firmed_data/'+filename+'.png.gt.txt', 'w') as file:
         file.write(firm_text)
     # os.remove('images_text/'+filename+'.png.gt.txt')
+    #check file exist or not
+    if(os.path.isfile('firmed_image/'+filename+'.png')):
+        os.remove('firmed_image/'+filename+'.png')
     os.rename("origin_data/"+filename+'.png', "firmed_image/"+filename+'.png')
 
 sg.theme('DarkAmber')   # Add a touch of color
