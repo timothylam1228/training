@@ -1,62 +1,91 @@
-#display image and text in a window
-from email.policy import default
-from weakref import finalize
-import cv2
 import os
-import PySimpleGUI as sg
-from os import path
+from tkinter import Image
+import cv2
+#use tensorflow to do image classification
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.models import Sequential
+from PIL import Image
+
+# #helper libraries
+import numpy as np
+# import matplotlib.pyplot as plt
+
+# #load data
+import pandas as pd
+import csv
+
+# #Load data
+# def load_image( infilename ) :
+#     img = Image.open( infilename )
+#     img.load()
+#     data = np.asarray( img, dtype="int32" )
+#     return data
+
+data = pd.read_csv('Passed.csv')
+
+#split data into train and test
 
 
-  
-def display(image, text):
-    # print(image)
-    layout = [[sg.Image(image, key='image')],
-            [sg.Text('Enter Text'), sg.InputText(text, key='text')],
-            [sg.Button('Ok',bind_return_key=True)] ]
-    window = sg.Window('Window Title', layout,finalize=True)
-    window.TKroot.focus_force()
-    window['text'].Widget.focus_force()
-    #ENLARGE THE WINDOW
-    #set inputtext field focus
-    while True:
-        event, values = window.read()
-        print(event, values)
-        if(event == 'Ok'):
-            print(values['text'])
-            break
-        # print('You entered ', values[0])
-    window.close()
-    return values['text']
+#make prediction
+# predictions = model.predict(test_x
 
-#
-#for loop
-# #
-for images in os.listdir('origin_data'):
-    if(images == '.DS_Store'):
-        continue
-    print(images)
-    #get filename without extension
-    filename = os.path.splitext(images)[0]
-    image = path.join('origin_data', images)
-    #enlarge the image
+#main function
+
+def create_dataset_PIL(img_folder):
+    
+    img_data_array=[]
+    class_name=[]
+    for file in os.listdir(os.path.join(img_folder)):
+        image_path= os.path.join(img_folder,  file)
+        image= np.array(Image.open(image_path))
+        image = image.astype('float32')
+        image /= 255  
+        img_data_array.append(image)
+    return img_data_array , class_name
+
+def main():
+    train = data.sample(frac=0.8,random_state=0)
+    test = data.drop(train.index)
+
+    #split data into x and y
+    #get current directory
+    ROOT = os.path.dirname(os.path.abspath(__file__))
+    PIL_img_data, class_name=create_dataset_PIL(ROOT+'\\Passed-1')
+    print(PIL_img_data)
+    image_path = train.iloc[:,0]
+    train_x = cv2.imread(image_path)
+    train_y = train.iloc[:,1]
+    test_x = test.iloc[:,0]
+    test_y = test.iloc[:,1]
+
+    #load image
+
+    #start training
+    model = keras.Sequential([
+        keras.layers.Flatten(input_shape=(28, 28)),
+        keras.layers.Dense(128, activation=tf.nn.relu),
+        keras.layers.Dense(10, activation=tf.nn.softmax)
+    ])
+
+    model.compile(optimizer='adam',
+                    loss='sparse_categorical_crossentropy',
+                    metrics=['accuracy'])
+
+    model.fit(train_x, train_y, epochs=5)
+
+    #test model
+    test_loss, test_acc = model.evaluate(test_x, test_y)
+
+    print('Test accuracy:', test_acc)
 
 
-    text = open('images_text/'+filename+'.png.gt.txt','r').read()
-    # print(text.read())
-    firm_text = display(image, text)
-    with open('firmed_data/'+filename+'.png.gt.txt', 'w') as file:
-        file.write(firm_text)
-    # os.remove('images_text/'+filename+'.png.gt.txt')
-    #check file exist or not
-    if(os.path.isfile('firmed_image/'+filename+'.png')):
-        os.remove('firmed_image/'+filename+'.png')
-    os.rename("origin_data/"+filename+'.png', "firmed_image/"+filename+'.png')
+main()
+# def readCSV():
+#     with open('Passed.csv', 'r') as csvfile:
+#         reader = csv.reader(csvfile)
+#         for row in reader:
+#             print(row)
 
-sg.theme('DarkAmber')   # Add a touch of color
-# All the stuff inside your window.
-
-
-# Create the Window
-
-# Event Loop to process "events" and get the "values" of the inputs
-
+# readCSV()
