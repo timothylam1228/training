@@ -1,5 +1,6 @@
 #display image and text in a window
 from email.policy import default
+from weakref import finalize
 import cv2
 import os
 import PySimpleGUI as sg
@@ -9,11 +10,14 @@ from os import path
   
 def display(image, text):
     # print(image)
-    layout = [[sg.Image(image)],
+    layout = [[sg.Image(image, key='image')],
             [sg.Text('Enter Text'), sg.InputText(text, key='text')],
-            [sg.Button('Ok')] ]
-    image = cv2.imread('origin_data/'+image)
-    window = sg.Window('Window Title', layout)
+            [sg.Button('Ok',bind_return_key=True)] ]
+    window = sg.Window('Window Title', layout,finalize=True)
+    window.TKroot.focus_force()
+    window['text'].Widget.focus_force()
+    #ENLARGE THE WINDOW
+    #set inputtext field focus
     while True:
         event, values = window.read()
         print(event, values)
@@ -34,6 +38,9 @@ for images in os.listdir('origin_data'):
     #get filename without extension
     filename = os.path.splitext(images)[0]
     image = path.join('origin_data', images)
+    #enlarge the image
+
+
     text = open('images_text/'+filename+'.png.gt.txt','r').read()
     # print(text.read())
     firm_text = display(image, text)
